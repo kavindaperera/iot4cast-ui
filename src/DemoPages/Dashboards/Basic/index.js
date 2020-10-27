@@ -44,6 +44,9 @@ import avatar2 from "../../../assets/utils/images/avatars/2.jpg";
 import avatar3 from "../../../assets/utils/images/avatars/3.jpg";
 import avatar4 from "../../../assets/utils/images/avatars/4.jpg";
 
+import axios from 'axios';
+import _ from 'lodash';
+
 const data = [
   { name: "Page A", uv: 4000, pv: 2400, amt: 2400 },
   { name: "Page B", uv: 3000, pv: 1398, amt: 2210 },
@@ -71,6 +74,10 @@ const data2 = [
   { name: "Page G", uv: 5349, pv: 3430, amt: 3210 },
 ];
 
+const api = axios.create({
+  baseURL: `https://iot4cast.000webhostapp.com/api/weather/read_all.php`
+})
+
 export default class AnalyticsDashboard1 extends Component {
   constructor() {
     super();
@@ -78,6 +85,9 @@ export default class AnalyticsDashboard1 extends Component {
     this.state = {
       dropdownOpen: false,
       activeTab1: "11",
+      weather : [],
+      last_record : [],
+      before_last_record : [],
     };
     this.toggle = this.toggle.bind(this);
     this.toggle1 = this.toggle1.bind(this);
@@ -97,7 +107,53 @@ export default class AnalyticsDashboard1 extends Component {
     }
   }
 
+  intervalID;
+
+  componentDidMount() {
+    this.getData();
+  }
+
+  componentWillUnmount() {
+    /*
+      stop getData() from continuing to run even
+      after unmounting this component. Notice we are calling
+      'clearTimeout()` here rather than `clearInterval()` as
+      in the previous example.
+    */
+    clearTimeout(this.intervalID);
+  }
+
+  getData = () => {
+    fetch(`http://localhost/iot4cast-api/api/read_all.php`)
+      .then(response => response.json())
+      .then(res => {
+        //console.log(res.weather)
+        this.setState(
+          {
+            weather: res.weather,
+            last_record : res.weather.slice(-1)[0],
+            before_last_record : res.weather.slice(-2)[0],
+          })
+        // call getData() again in 5 seconds
+        this.intervalID = setTimeout(this.getData.bind(this), 5000);
+      })
+      .catch((error) => console.log({error}), this.intervalID = setTimeout(this.getData.bind(this), 5000));
+  }
+  
+
   render() {
+    console.log(this.state.before_last_record);
+    
+    let temp_change = ((this.state.last_record.temp-this.state.before_last_record.temp)/this.state.before_last_record.temp)*100;
+    let humidity_change = ((this.state.last_record.humidity-this.state.before_last_record.humidity)/this.state.before_last_record.humidity)*100;
+    let pressure_change = ((this.state.last_record.pressure-this.state.before_last_record.pressure)/this.state.before_last_record.pressure)*100;
+    let light_change = ((this.state.last_record.light-this.state.before_last_record.light)/this.state.before_last_record.light)*100;
+
+
+    
+
+    
+
     return (
       <Fragment>
         <ReactCSSTransitionGroup
@@ -111,18 +167,18 @@ export default class AnalyticsDashboard1 extends Component {
           <div>
             <PageTitle
               heading="Summary"
-              subheading="Summary of last 24 hours"
+              subheading="iot4cast Weather Monitor"
               icon="pe-7s-home icon-gradient bg-malibu-beach"
             />
             <Row>
-              <Col md="12" lg="6">
+              {/*<Col md="12" lg="6">
                 <Card className="mb-3">
                   <CardHeader className="card-header-tab">
                     <div className="card-header-title">
                       <i className="header-icon lnr-rocket icon-gradient bg-tempting-azure">
                         {" "}
                       </i>
-                      Bandwidth Reports
+                      Percentage Changes
                     </div>
                     <div className="btn-actions-pane-right">
                       <Button
@@ -151,7 +207,7 @@ export default class AnalyticsDashboard1 extends Component {
                       >
                         Tab 2
                       </Button>
-                    </div>
+                      </div>
                   </CardHeader>
                   <TabContent activeTab={this.state.activeTab1}>
                     <TabPane tabId="11">
@@ -168,7 +224,7 @@ export default class AnalyticsDashboard1 extends Component {
                                   </div>
                                   <div className="widget-content-right">
                                     <div className="text-muted opacity-6">
-                                      Generated Leads
+                                      Temperature Change
                                     </div>
                                   </div>
                                 </div>
@@ -454,66 +510,66 @@ export default class AnalyticsDashboard1 extends Component {
                     </TabPane>
                   </TabContent>
                 </Card>
-              </Col>
-              <Col md="12" lg="6">
+              </Col>*/}
+              <Col md="12" lg="12">
                 <Row>
-                  <Col md="6">
+                  <Col md="3">
                     <div className="card mb-3 bg-arielle-smile widget-chart text-white card-border">
                       <div className="icon-wrapper rounded-circle">
                         <div className="icon-wrapper-bg bg-white opacity-10" />
                         <i className="pe-7s-graph3 icon-gradient bg-arielle-smile" />
                       </div>
-                      <div className="widget-numbers">27.4 °C</div>
+                      <div className="widget-numbers">{this.state.last_record.temp} °C</div>
                       <div className="widget-subheading">Temperature</div>
                       <div className="widget-description text-white">
-                        <FontAwesomeIcon icon={faAngleUp} />
-                        <span className="pl-1"> 4.9%</span>
+                        <FontAwesomeIcon icon={Math.sign(temp_change) == 1 ? faAngleUp : faAngleDown} />
+                      <span className="pl-1"> {Math.abs(temp_change).toFixed(2)} %</span>
                       </div>
                     </div>
                   </Col>
-                  <Col md="6">
+                  <Col md="3">
                     <div className="card mb-3 bg-midnight-bloom widget-chart text-white card-border">
                       <div className="icon-wrapper rounded">
                         <div className="icon-wrapper-bg bg-white opacity-10" />
                         <i className="pe-7s-drop icon-gradient bg-warm-flame" />
                       </div>
-                      <div className="widget-numbers">75.2 %</div>
+                      <div className="widget-numbers">{this.state.last_record.humidity} %</div>
                       <div className="widget-subheading">Humidity</div>
                       <div className="widget-description text-white">
-                        <FontAwesomeIcon icon={faAngleUp} />
-                        <span className="pr-1"> 2.7%</span>
+                        <FontAwesomeIcon icon={Math.sign(humidity_change) == 1 ? faAngleUp : faAngleDown} />
+                        <span className="pr-1"> {Math.abs(humidity_change).toFixed(2)} %</span>
                       </div>
                     </div>
                   </Col>
-                  <Col md="6">
+                  <Col md="3">
                     <div className="card mb-3 bg-grow-early widget-chart text-white card-border">
                       <div className="icon-wrapper rounded">
                         <div className="icon-wrapper-bg bg-dark opacity-9" />
                         <i className="pe-7s-stopwatch text-white" />
                       </div>
-                      <div className="widget-numbers">100932.33 Pa</div>
+                      <div className="widget-numbers">{this.state.last_record.pressure} Pa</div>
                       <div className="widget-subheading">Pressure</div>
                       <div className="widget-description text-white">
-                        <FontAwesomeIcon icon={faAngleUp} />
-                        <span className="pl-1"> 7.1%</span>
+                        <FontAwesomeIcon icon={Math.sign(pressure_change) == 1 ? faAngleUp : faAngleDown} />
+                        <span className="pl-1"> {Math.abs(pressure_change).toFixed(2)} %</span>
                       </div>
                     </div>
                   </Col>
-                  <Col md="6">
+                  <Col md="3">
                     <div className="card mb-3 bg-love-kiss widget-chart card-border">
                       <div className="widget-chart-content text-white">
                         <div className="icon-wrapper rounded-circle">
                           <div className="icon-wrapper-bg bg-white opacity-4" />
                           <i className="pe-7s-light" />
                         </div>
-                        <div className="widget-numbers">53.33. lx</div>
+                        <div className="widget-numbers">{this.state.last_record.light} lx</div>
                         <div className="widget-subheading">Ambient Light</div>
                         <div className="widget-description">
                           <FontAwesomeIcon
                             className="text-white opacity-5"
-                            icon={faAngleUp}
+                            icon={Math.sign(light_change) == 1 ? faAngleUp : faAngleDown}
                           />
-                          <span className="text-white">5.5%</span>
+                          <span className="text-white">{Math.abs(light_change).toFixed(2)} %</span>
                         </div>
                       </div>
                       <div className="widget-chart-wrapper">
@@ -541,192 +597,53 @@ export default class AnalyticsDashboard1 extends Component {
               <Col md="12">
                 <Card className="main-card mb-3">
                   <div className="card-header">
-                    Active Users
-                    <div className="btn-actions-pane-right">
+                    Last 10 Readings
+                    {/*<div className="btn-actions-pane-right">
                       <div role="group" className="btn-group-sm btn-group">
                         <button className="active btn btn-info">
                           Last Week
                         </button>
                         <button className="btn btn-info">All Month</button>
                       </div>
-                    </div>
+                    </div>*/}
                   </div>
                   <div className="table-responsive">
                     <table className="align-middle mb-0 table table-borderless table-striped table-hover">
                       <thead>
                         <tr>
                           <th className="text-center">#</th>
-                          <th>Name</th>
-                          <th className="text-center">City</th>
-                          <th className="text-center">Status</th>
-                          <th className="text-center">Actions</th>
+                          <th className="text-center">Temperature</th>
+                          <th className="text-center">Humidity</th>
+                          <th className="text-center">Pressure</th>
+                          <th className="text-center">Ambient Light</th>
                         </tr>
                       </thead>
+
                       <tbody>
-                        <tr>
-                          <td className="text-center text-muted">#345</td>
-                          <td>
-                            <div className="widget-content p-0">
-                              <div className="widget-content-wrapper">
-                                <div className="widget-content-left mr-3">
-                                  <div className="widget-content-left">
-                                    <img
-                                      width={40}
-                                      className="rounded-circle"
-                                      src={avatar4}
-                                      alt="Avatar"
-                                    />
-                                  </div>
-                                </div>
-                                <div className="widget-content-left flex2">
-                                  <div className="widget-heading">John Doe</div>
-                                  <div className="widget-subheading opacity-7">
-                                    Web Developer
-                                  </div>
-                                </div>
-                              </div>
-                            </div>
-                          </td>
-                          <td className="text-center">Madrid</td>
-                          <td className="text-center">
-                            <div className="badge badge-warning">Pending</div>
-                          </td>
-                          <td className="text-center">
-                            <button
-                              type="button"
-                              className="btn btn-primary btn-sm"
-                            >
-                              Details
-                            </button>
-                          </td>
-                        </tr>
-                        <tr>
-                          <td className="text-center text-muted">#347</td>
-                          <td>
-                            <div className="widget-content p-0">
-                              <div className="widget-content-wrapper">
-                                <div className="widget-content-left mr-3">
-                                  <div className="widget-content-left">
-                                    <img
-                                      width={40}
-                                      className="rounded-circle"
-                                      src={avatar3}
-                                      alt="Avatar"
-                                    />
-                                  </div>
-                                </div>
-                                <div className="widget-content-left flex2">
-                                  <div className="widget-heading">
-                                    Ruben Tillman
-                                  </div>
-                                  <div className="widget-subheading opacity-7">
-                                    Etiam sit amet orci eget
-                                  </div>
-                                </div>
-                              </div>
-                            </div>
-                          </td>
-                          <td className="text-center">Berlin</td>
-                          <td className="text-center">
-                            <div className="badge badge-success">Completed</div>
-                          </td>
-                          <td className="text-center">
-                            <button
-                              type="button"
-                              className="btn btn-primary btn-sm"
-                            >
-                              Details
-                            </button>
-                          </td>
-                        </tr>
-                        <tr>
-                          <td className="text-center text-muted">#321</td>
-                          <td>
-                            <div className="widget-content p-0">
-                              <div className="widget-content-wrapper">
-                                <div className="widget-content-left mr-3">
-                                  <div className="widget-content-left">
-                                    <img
-                                      width={40}
-                                      className="rounded-circle"
-                                      src={avatar2}
-                                      alt="Avatar"
-                                    />
-                                  </div>
-                                </div>
-                                <div className="widget-content-left flex2">
-                                  <div className="widget-heading">
-                                    Elliot Huber
-                                  </div>
-                                  <div className="widget-subheading opacity-7">
-                                    Lorem ipsum dolor sic
-                                  </div>
-                                </div>
-                              </div>
-                            </div>
-                          </td>
-                          <td className="text-center">London</td>
-                          <td className="text-center">
-                            <div className="badge badge-danger">
-                              In Progress
-                            </div>
-                          </td>
-                          <td className="text-center">
-                            <button
-                              type="button"
-                              className="btn btn-primary btn-sm"
-                            >
-                              Details
-                            </button>
-                          </td>
-                        </tr>
-                        <tr>
-                          <td className="text-center text-muted">#55</td>
-                          <td>
-                            <div className="widget-content p-0">
-                              <div className="widget-content-wrapper">
-                                <div className="widget-content-left mr-3">
-                                  <div className="widget-content-left">
-                                    <img
-                                      width={40}
-                                      className="rounded-circle"
-                                      src={avatar1}
-                                      alt="Avatar"
-                                    />
-                                  </div>
-                                </div>
-                                <div className="widget-content-left flex2">
-                                  <div className="widget-heading">
-                                    Vinnie Wagstaff
-                                  </div>
-                                  <div className="widget-subheading opacity-7">
-                                    UI Designer
-                                  </div>
-                                </div>
-                              </div>
-                            </div>
-                          </td>
-                          <td className="text-center">Amsterdam</td>
-                          <td className="text-center">
-                            <div className="badge badge-info">On Hold</div>
-                          </td>
-                          <td className="text-center">
-                            <button
-                              type="button"
-                              className="btn btn-primary btn-sm"
-                            >
-                              Details
-                            </button>
-                          </td>
-                        </tr>
+                        
+                          {_.takeRight(this.state.weather,10).reverse().map(record => 
+
+                                <tr key={record.id}>
+                                  <td className="text-center text-muted">{record.id}</td>
+                                  <td className="text-center text-muted">{record.temp}°C</td>
+                                  <td className="text-center text-muted">{record.humidity}%</td>
+                                  <td className="text-center text-muted">{record.pressure}Pa</td>
+                                  <td className="text-center text-muted">{record.light}lx</td>
+
+                                  </tr>
+
+                            )}
+                          
+                        
+                        
                       </tbody>
                     </table>
                   </div>
                   <div className="d-block text-center card-footer">
-                    <button className="mr-2 btn-icon btn-icon-only btn btn-outline-danger">
+                    {/* <button className="mr-2 btn-icon btn-icon-only btn btn-outline-danger">
                       <i className="pe-7s-trash btn-icon-wrapper"> </i>
                     </button>
-                    <button className="btn-wide btn btn-success">Save</button>
+                    <button className="btn-wide btn btn-success">Save</button> */}
                   </div>
                 </Card>
               </Col>

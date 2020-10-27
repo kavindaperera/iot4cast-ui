@@ -8,7 +8,8 @@ import {
 
 import {
     faStar,
-    faBusinessTime
+    faBusinessTime,
+    faRetweet
 
 } from '@fortawesome/free-solid-svg-icons';
 
@@ -38,14 +39,14 @@ export default class TitleComponent2 extends Component {
     render() {
         return (
             <Fragment>
-                <Button className="btn-shadow mr-3" onClick={this.notify22} color="dark"
+                <Button className="btn-shadow mr-3" onClick={()=>window.location.reload(false)} color="dark"
                         id="Tooltip-123">
-                    <FontAwesomeIcon icon={faStar}/>
+                    <FontAwesomeIcon icon={faRetweet}/>
                 </Button>
                 <UncontrolledTooltip placement="left" target={'Tooltip-123'}>
-                    Show a Toastify notification example!
+                    Force Refresh
                 </UncontrolledTooltip>
-                <UncontrolledDropdown className="d-inline-block">
+                {/*<UncontrolledDropdown className="d-inline-block">
                     <DropdownToggle color="info" className="btn-shadow" caret>
                         <span className="btn-icon-wrapper pr-2 opacity-7">
                             <FontAwesomeIcon icon={faBusinessTime}/>
@@ -83,7 +84,7 @@ export default class TitleComponent2 extends Component {
                             </NavItem>
                         </Nav>
                     </DropdownMenu>
-                </UncontrolledDropdown>
+        </UncontrolledDropdown>*/}
             </Fragment>
         );
     }

@@ -23,7 +23,7 @@ class Header extends React.Component {
                     component="div"
                     className={cx("app-header", headerBackgroundColor, {'header-shadow': enableHeaderShadow})}
                     transitionName="HeaderAnimation"
-                    transitionAppear={true}
+                    transitionAppear={false}
                     transitionAppearTimeout={1500}
                     transitionEnter={false}
                     transitionLeave={false}>
@@ -38,7 +38,7 @@ class Header extends React.Component {
                             <SearchBox/>
                         </div>
                         <div className="app-header-right">
-                            <UserBox/>
+                            
                         </div>
                     </div>
                 </ReactCSSTransitionGroup>
